@@ -1,44 +1,37 @@
-# app.py
-
 import streamlit as st
 import pandas as pd
 import openai
 import re
 import io
 
-# Title
-st.title("🔍 Keyword Prioritization Scorer (AI-powered)")
+# Streamlit UI
+st.title("🔍 Keyword Conversion Scorer")
 
-# Sidebar Inputs
-st.sidebar.header("🛠️ Configuration")
+# Sidebar – API key input
+openai_api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 
-api_key = st.sidebar.text_input("OpenAI API Key", type="password")
-openai.api_key = api_key
-
-# Business Context Inputs
+# Business inputs
 st.header("📋 Business Context")
+industry = st.text_input("Industry/Niche (e.g., SaaS, fitness, logistics)")
+business_desc = st.text_area("Business Description")
+conversion_goal = st.text_input("Conversion Goal (e.g., 'book a demo', 'purchase')")
+services = st.text_area("Key Service/Product Pages")
+audience = st.text_area("Target Audience")
 
-niche = st.text_input("Business Niche / Industry", help="e.g., Third-party logistics, Online fitness coaching")
-description = st.text_area("Business Description", help="What does the business do? Products/services? Unique selling points?")
-conversion_goal = st.text_input("Primary Conversion Goal", help="e.g., Sign up for service, Book a call, Buy product")
-service_pages = st.text_area("Key Service/Product Pages", help="e.g., 3PL fulfillment, Nutrition plans")
-audience = st.text_area("Target Audience", help="e.g., B2B brands, busy professionals, SMB owners")
+# Upload CSV
+st.header("📂 Upload CSV File")
+csv_file = st.file_uploader("Upload a CSV with a 'keywords' column", type=["csv"])
 
-# File Upload
-st.header("📂 Upload Your Keyword CSV")
-uploaded_file = st.file_uploader("Upload a CSV with a 'keywords' column", type=["csv"])
-
-# Processing logic
-if uploaded_file and api_key and niche and description and conversion_goal and service_pages and audience:
-    df = pd.read_csv(uploaded_file)
+# Proceed only if everything is filled
+if openai_api_key and industry and business_desc and conversion_goal and services and audience and csv_file:
+    df = pd.read_csv(csv_file)
 
     if 'keywords' not in df.columns:
-        st.error("❌ Your CSV must contain a 'keywords' column.")
+        st.error("The uploaded CSV must contain a column named 'keywords'.")
     else:
+        client = openai.OpenAI(api_key=openai_api_key)
         keywords = df['keywords'].tolist()
         batch_size = 10
-
-        st.info(f"✅ {len(keywords)} keywords loaded. Scoring in batches of {batch_size}...")
 
         def score_keywords_batch(keywords):
             scored_keywords = []
@@ -49,79 +42,68 @@ if uploaded_file and api_key and niche and description and conversion_goal and s
                 st.write(f"Processing batch {i // batch_size + 1} of {total // batch_size + 1}")
 
                 prompt = f"""
-You are a digital marketing expert for the following business:
+You are a digital marketing expert. The business you're helping works in the following industry: {industry}.
+Their description: {business_desc}
+Primary conversion goal: {conversion_goal}
+Key services: {services}
+Target audience: {audience}
 
-Industry: {niche}
-Business Description: {description}
-Conversion Goal: {conversion_goal}
-Key Service/Product Pages: {service_pages}
-Target Audience: {audience}
+Score each keyword on a scale of 1–5:
+- 5 = High intent to convert (direct service queries)
+- 4 = Likely to convert soon (comparison or product-research terms)
+- 3 = Mid-funnel (consideration)
+- 2 = Informational (top-of-funnel)
+- 1 = Not relevant or poor intent
 
-Your task is to score each keyword below from 1 to 5 based on likelihood of leading to a conversion:
-- 5: Direct match to service-level page or very high commercial intent.
-- 4: Closely related to services with clear intent.
-- 3: Mid-funnel research or consideration intent.
-- 2: Top-of-funnel informational queries.
-- 1: Unrelated or low-intent content.
+Here is the list of keywords:
+{chr(10).join(f"{j+1}. {kw}" for j, kw in enumerate(batch))}
 
-Return scores in the format:
+Return scores like:
 1. 5
 2. 3
 3. 2
-
-Keywords:
-{chr(10).join(f"{j+1}. {kw}" for j, kw in enumerate(batch))}
 """
 
                 try:
-                    response = openai.ChatCompletion.create(
+                    response = client.chat.completions.create(
                         model="gpt-4o",
                         messages=[
-                            {"role": "system", "content": "You are a keyword intent scoring expert."},
+                            {"role": "system", "content": "You are a keyword conversion scoring expert."},
                             {"role": "user", "content": prompt}
                         ],
-                        temperature=0.2,
-                        max_tokens=500
+                        max_tokens=800,
+                        temperature=0.2
                     )
-                    lines = response['choices'][0]['message']['content'].strip().split('\n')
+
+                    lines = response.choices[0].message.content.strip().split('\n')
                     scores = []
 
                     for line in lines:
-                        match = re.match(r'^\d+\.\s*(\d+)', line.strip())
-                        if match:
-                            score = int(match.group(1))
-                            scores.append(score)
-                        else:
-                            scores.append(1)  # fallback
+                        match = re.match(r'^\d+\.\s*(\d)', line.strip())
+                        score = int(match.group(1)) if match else 1
+                        scores.append(score)
 
+                    # Fill in if fewer scores returned
                     while len(scores) < len(batch):
                         scores.append(1)
 
                     scored_keywords.extend(scores)
 
                 except Exception as e:
-                    st.error(f"Error in batch starting with '{batch[0]}': {e}")
+                    st.error(f"❌ Error processing batch starting with '{batch[0]}': {e}")
                     scored_keywords.extend([1] * len(batch))
 
             return scored_keywords
 
-        # Score keywords
-        scores = score_keywords_batch(keywords)
-        df['score'] = scores
-
+        # Score and export
+        st.info("Scoring in progress. Please wait...")
+        df['score'] = score_keywords_batch(keywords)
         st.success("✅ Scoring complete!")
 
-        st.dataframe(df.head(15))
+        st.dataframe(df.head(20))
 
-        # Download link
-        csv_buffer = io.StringIO()
-        df.to_csv(csv_buffer, index=False)
-        st.download_button(
-            label="📥 Download Scored CSV",
-            data=csv_buffer.getvalue(),
-            file_name="scored_keywords.csv",
-            mime="text/csv"
-        )
-
+        csv_out = io.StringIO()
+        df.to_csv(csv_out, index=False)
+        st.download_button("📥 Download Scored CSV", data=csv_out.getvalue(), file_name="scored_keywords.csv", mime="text/csv")
 else:
-    st.warning("⬅️ Fill in all the fields and upload a CSV to begin.")
+    st.warning("Please complete all inputs and upload a CSV to get started.")
