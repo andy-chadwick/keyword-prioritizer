@@ -4,7 +4,8 @@ import openai
 import re
 import io
 
-# Streamlit UI
+st.set_page_config(page_title="Keyword Conversion Scorer", page_icon="🔍")
+
 st.title("🔍 Keyword Conversion Scorer")
 
 # Sidebar – API key input
@@ -22,12 +23,12 @@ audience = st.text_area("Target Audience")
 st.header("📂 Upload CSV File")
 csv_file = st.file_uploader("Upload a CSV with a 'keywords' column", type=["csv"])
 
-# Proceed only if everything is filled
+# Only proceed if all inputs and CSV are filled
 if openai_api_key and industry and business_desc and conversion_goal and services and audience and csv_file:
     df = pd.read_csv(csv_file)
 
     if 'keywords' not in df.columns:
-        st.error("The uploaded CSV must contain a column named 'keywords'.")
+        st.error("❌ The uploaded CSV must contain a column named 'keywords'.")
     else:
         client = openai.OpenAI(api_key=openai_api_key)
         keywords = df['keywords'].tolist()
@@ -39,7 +40,7 @@ if openai_api_key and industry and business_desc and conversion_goal and service
 
             for i in range(0, total, batch_size):
                 batch = keywords[i:i + batch_size]
-                st.write(f"Processing batch {i // batch_size + 1} of {total // batch_size + 1}")
+                st.write(f"🧠 Processing batch {i // batch_size + 1} of {total // batch_size + 1}")
 
                 prompt = f"""
 You are a digital marketing expert. The business you're helping works in the following industry: {industry}.
@@ -83,7 +84,6 @@ Return scores like:
                         score = int(match.group(1)) if match else 1
                         scores.append(score)
 
-                    # Fill in if fewer scores returned
                     while len(scores) < len(batch):
                         scores.append(1)
 
@@ -95,8 +95,7 @@ Return scores like:
 
             return scored_keywords
 
-        # Score and export
-        st.info("Scoring in progress. Please wait...")
+        st.info("⚙️ Scoring in progress. This may take a minute...")
         df['score'] = score_keywords_batch(keywords)
         st.success("✅ Scoring complete!")
 
@@ -106,4 +105,4 @@ Return scores like:
         df.to_csv(csv_out, index=False)
         st.download_button("📥 Download Scored CSV", data=csv_out.getvalue(), file_name="scored_keywords.csv", mime="text/csv")
 else:
-    st.warning("Please complete all inputs and upload a CSV to get started.")
+    st.warning("🚧 Please complete all fields and upload a CSV to begin.")
