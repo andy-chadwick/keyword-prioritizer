@@ -3,6 +3,7 @@ import pandas as pd
 import openai
 import re
 import io
+import httpx
 
 st.set_page_config(page_title="Keyword Conversion Scorer", page_icon="🔍")
 st.title("🔍 Keyword Conversion Scorer")
@@ -49,9 +50,10 @@ if can_run:
         st.error("❌ Invalid OpenAI API key. It should start with 'sk-'.")
         st.stop()
 
-    # Initialize OpenAI client
+    # Initialize OpenAI client with custom HTTP client
     try:
-        client = openai.OpenAI(api_key=openai_api_key)
+        http_client = httpx.Client()  # No proxies
+        client = openai.OpenAI(api_key=openai_api_key, http_client=http_client)
     except Exception as e:
         st.error(f"❌ Failed to initialize OpenAI client: {e}")
         st.stop()
