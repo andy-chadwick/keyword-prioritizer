@@ -5,7 +5,6 @@ import re
 import io
 
 st.set_page_config(page_title="Keyword Conversion Scorer", page_icon="🔍")
-
 st.title("🔍 Keyword Conversion Scorer")
 
 # Sidebar – API key input
@@ -23,8 +22,10 @@ audience = st.text_area("Target Audience")
 st.header("📂 Upload CSV File")
 csv_file = st.file_uploader("Upload a CSV with a 'keywords' column", type=["csv"])
 
-# Only proceed if all inputs and CSV are filled
-if openai_api_key and industry and business_desc and conversion_goal and services and audience and csv_file:
+# All fields must be filled to proceed
+can_run = all([openai_api_key, industry, business_desc, conversion_goal, services, audience, csv_file])
+
+if can_run:
     df = pd.read_csv(csv_file)
 
     if 'keywords' not in df.columns:
@@ -66,7 +67,7 @@ Return scores like:
 """
 
                 try:
-                    response = openai.OpenAI(api_key=openai_api_key).chat.completions.create(
+                    response = client.chat.completions.create(
                         model="gpt-4o",
                         messages=[
                             {"role": "system", "content": "You are a keyword conversion scoring expert."},
