@@ -58,7 +58,14 @@ if can_run:
         st.error(f"❌ Failed to initialize OpenAI client: {e}")
         st.stop()
 
-    keywords = df['keywords'].tolist()
+    # Clean keywords and track valid ones
+    df['keywords'] = df['keywords'].fillna('')  # Replace NaN with empty string
+   -chave_keywords = df['keywords'].str.strip() != ''  # Valid keywords are non-empty
+    keywords = df.loc[valid_keywords, 'keywords'].tolist()  # Only valid keywords for scoring
+    if not keywords:
+        st.error("❌ No valid keywords found in the CSV.")
+        st.stop()
+
     batch_size = 10
 
     def score_keywords_batch(keywords):
@@ -123,7 +130,12 @@ Return scores like:
         return scored_keywords
 
     st.info("⚙️ Scoring in progress. This may take a minute...")
-    df['score'] = score_keywords_batch(keywords)
+    # Initialize score column with default value (1) for all rows
+    df['score'] = 1
+    # Score valid keywords
+    valid_scores = score_keywords_batch(keywords)
+    # Assign scores to valid rows
+    df.loc[valid_keywords, 'score'] = valid_scores[:len(df[valid_keywords])]
     st.success("✅ Scoring complete!")
 
     st.dataframe(df.head(20))
