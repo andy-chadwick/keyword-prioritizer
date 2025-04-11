@@ -66,7 +66,7 @@ Return scores like:
 """
 
                 try:
-                    response = client.chat.completions.create(
+                    response = openai.OpenAI(api_key=openai_api_key).chat.completions.create(
                         model="gpt-4o",
                         messages=[
                             {"role": "system", "content": "You are a keyword conversion scoring expert."},
