@@ -13,10 +13,10 @@ openai_api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="passwo
 
 # Business inputs
 st.header("📋 Business Context")
-industry = st.text_input("Industry/Niche (e.g., SaaS, fitness, logistics)")
+industry = st.text_input("Industry/Niche (e.g., SaaS, fitness, logistics, e-commerce)")
 business_desc = st.text_area("Business Description")
 conversion_goal = st.text_input("Conversion Goal (e.g., 'book a demo', 'purchase')")
-services = st.text_area("Key Service/Product Pages")
+services = st.text_area("Key Services or Products (e.g., steel doors, fire exit doors, security front doors)")
 audience = st.text_area("Target Audience")
 
 # Upload CSV
@@ -73,7 +73,7 @@ if can_run:
 You are a digital marketing expert. The business you're helping works in the following industry: {industry}.
 Their description: {business_desc}
 Primary conversion goal: {conversion_goal}
-Key services: {services}
+Key services or products: {services}
 Target audience: {audience}
 
 Score each keyword on a scale of 1–5:
