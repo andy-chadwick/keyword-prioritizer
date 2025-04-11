@@ -60,7 +60,7 @@ if can_run:
 
     # Clean keywords and track valid ones
     df['keywords'] = df['keywords'].fillna('')  # Replace NaN with empty string
-   -chave_keywords = df['keywords'].str.strip() != ''  # Valid keywords are non-empty
+    valid_keywords = df['keywords'].str.strip() != ''  # Valid keywords are non-empty
     keywords = df.loc[valid_keywords, 'keywords'].tolist()  # Only valid keywords for scoring
     if not keywords:
         st.error("❌ No valid keywords found in the CSV.")
