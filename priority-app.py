@@ -45,23 +45,21 @@ if can_run:
         st.error("❌ The uploaded CSV must contain a column named 'keywords'.")
         st.stop()
     
-    # Validate API key format
     if not openai_api_key.startswith("sk-"):
         st.error("❌ Invalid OpenAI API key. It should start with 'sk-'.")
         st.stop()
 
-    # Initialize OpenAI client with custom HTTP client
     try:
-        http_client = httpx.Client()  # No proxies
+        http_client = httpx.Client()
         client = openai.OpenAI(api_key=openai_api_key, http_client=http_client)
     except Exception as e:
         st.error(f"❌ Failed to initialize OpenAI client: {e}")
         st.stop()
 
-    # Clean keywords and track valid ones
-    df['keywords'] = df['keywords'].fillna('')  # Replace NaN with empty string
-    valid_keywords = df['keywords'].str.strip() != ''  # Valid keywords are non-empty
-    keywords = df.loc[valid_keywords, 'keywords'].tolist()  # Only valid keywords for scoring
+    df['keywords'] = df['keywords'].fillna('')
+    valid_keywords = df['keywords'].str.strip() != ''
+    keywords = df.loc[valid_keywords, 'keywords'].tolist()
+
     if not keywords:
         st.error("❌ No valid keywords found in the CSV.")
         st.stop()
@@ -77,38 +75,52 @@ if can_run:
             st.write(f"🧠 Processing batch {i // batch_size + 1} of {(total // batch_size) + 1}")
 
             prompt = f"""
-You are a digital marketing expert specializing in content marketing. The business you're helping works in the following industry: {industry}.
-Their description: {business_desc}
-Primary conversion goal: {conversion_goal}
-Key services or products: {services}
-Target audience: {audience}
+You are a digital marketing expert helping a business prioritize informational keywords for their blog content.
 
-Score each keyword (representing a content idea) on a scale of 1–5 based on how closely it aligns with the business’s specific offerings (as described in the key services or products) and its potential to guide the target audience toward the conversion goal (e.g., through CTAs, content engagement, or natural progression into the sales funnel). Prioritize keywords that directly mention or strongly relate to the business’s products, services, or conversion goal, as these are most likely to drive conversions:
+The business details are:
+- Industry: {industry}
+- Description: {business_desc}
+- Key Products or Services: {services}
+- Target Audience: {audience}
+- Primary Conversion Goal: {conversion_goal}
 
-- 5 = Extremely aligned: The content idea directly mentions the business’s products, services, or conversion goal, with strong potential to drive conversions by addressing specific customer needs or pain points (e.g., for a business selling '{services}', a keyword like 'best {services} for {audience}' would score 5).
-- 4 = Highly aligned: The content idea is closely tied to the business’s offerings or audience needs, attracting users who are researching solutions that could lead to the business’s products/services, with clear opportunities for CTAs (e.g., for a business with conversion goal '{conversion_goal}', a keyword like 'how to achieve {conversion_goal}' would score 4).
-- 3 = Moderately aligned: The content idea is relevant to the business’s industry or audience interests and could attract potential customers, but requires more education or nurturing to convert (e.g., for an industry '{industry}', a keyword like 'top trends in {industry}' would score 3).
-- 2 = Loosely aligned: The content idea has a weak connection to the business’s industry or audience, with low or indirect conversion potential (e.g., for a business selling '{services}', a keyword like 'general tips for {industry}' might score 2).
-- 1 = Minimally aligned: The content idea is only tangentially related to the business’s offerings, industry, or audience, with minimal likelihood of driving conversions (e.g., for a business selling '{services}', a keyword like 'unrelated topic in {industry}' would score 1).
+You will receive a list of **informational keywords**, each representing a potential blog topic idea.
 
-Here is the list of keywords:
+Your task is to **score each keyword from 1 to 5** based on:
+1. **How naturally the keyword/topic relates to the business’s offerings**
+2. **How easy it would be to include a meaningful and contextually relevant call-to-action (CTA)** toward the conversion goal within the content (e.g., linking to a product page, prompting a contact form, suggesting a demo or quote)
+
+You're not assessing immediate buying intent. You're evaluating whether content targeting that keyword can:
+- Attract the business’s target audience
+- Align with the products or services the business offers
+- Lead logically into a CTA without being forced or unrelated
+
+Scoring Guidelines:
+- 5 = Very strong alignment: Topic is highly relevant; CTAs fit naturally (e.g., “how to choose a fire exit door” for a business selling fire doors)
+- 4 = Strong alignment: Closely related and engaging; CTAs fit smoothly
+- 3 = Moderate alignment: Industry-relevant, but CTA would require a creative link
+- 2 = Weak alignment: Loosely related; CTA would feel somewhat forced
+- 1 = Poor alignment: Vague or off-topic; hard to link to services or conversion goal
+
+Now, score the following keywords:
 {chr(10).join(f"{j+1}. {kw}" for j, kw in enumerate(batch))}
 
-Return scores like:
+Respond like:
 1. 5
-2. 3
+2. 4
 3. 2
+...
 """
 
             try:
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[
-                        {"role": "system", "content": "You are a keyword conversion scoring expert."},
+                        {"role": "system", "content": "You are a keyword scoring expert."},
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=800,
-                    temperature=0.1  # Reduced for more deterministic scoring
+                    temperature=0.1
                 )
 
                 lines = response.choices[0].message.content.strip().split('\n')
@@ -131,11 +143,8 @@ Return scores like:
         return scored_keywords
 
     st.info("⚙️ Scoring in progress. This may take a minute...")
-    # Initialize score column with default value (1) for all rows
     df['score'] = 1
-    # Score valid keywords
     valid_scores = score_keywords_batch(keywords)
-    # Assign scores to valid rows
     df.loc[valid_keywords, 'score'] = valid_scores[:len(df[valid_keywords])]
     st.success("✅ Scoring complete!")
 
