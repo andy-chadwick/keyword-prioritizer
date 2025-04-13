@@ -1,5 +1,3 @@
-python
-
 import streamlit as st
 import pandas as pd
 import openai
@@ -117,7 +115,7 @@ Return scores like:
                 scores = []
 
                 for line in lines:
-                    match = re.match(r'^\d+\.\s*(\d)', line.strip())
+                    match = re.match(r'^\d+\.\s*(\ traits
                     score = int(match.group(1)) if match else 1
                     scores.append(score)
 
