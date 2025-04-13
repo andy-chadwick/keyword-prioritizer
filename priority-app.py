@@ -83,13 +83,13 @@ Primary conversion goal: {conversion_goal}
 Key services or products: {services}
 Target audience: {audience}
 
-Score each keyword (representing a content idea) on a scale of 1–5 based on how closely it aligns with the business’s offerings and its potential to guide the target audience toward the conversion goal (e.g., through CTAs, content engagement, or natural progression into the sales funnel):
+Score each keyword (representing a content idea) on a scale of 1–5 based on how closely it aligns with the business’s specific offerings (as described in the key services or products) and its potential to guide the target audience toward the conversion goal (e.g., through CTAs, content engagement, or natural progression into the sales funnel). Prioritize keywords that directly mention or strongly relate to the business’s products, services, or conversion goal, as these are most likely to drive conversions:
 
-- 5 = Extremely aligned: The content idea directly relates to the business’s products, services, or conversion goal, with strong potential to drive conversions (e.g., addressing specific pain points or needs that lead to the business’s solution).
-- 4 = Highly aligned: The content idea is closely tied to the business’s offerings or audience needs, attracting users who are researching solutions or evaluating options, with clear opportunities for CTAs to drive conversions.
-- 3 = Moderately aligned: The content idea is relevant to the business’s industry or audience interests, likely attracting potential customers but requiring more education or nurturing to convert.
-- 2 = Loosely aligned: The content idea has some connection to the business’s industry or audience but is broader or less focused, with lower or indirect conversion potential.
-- 1 = Minimally aligned: The content idea has only a tangential connection to the business’s offerings or audience, with minimal likelihood of driving conversions but still within the broader industry context.
+- 5 = Extremely aligned: The content idea directly mentions the business’s products, services, or conversion goal, with strong potential to drive conversions by addressing specific customer needs or pain points (e.g., for a business selling '{services}', a keyword like 'best {services} for {audience}' would score 5).
+- 4 = Highly aligned: The content idea is closely tied to the business’s offerings or audience needs, attracting users who are researching solutions that could lead to the business’s products/services, with clear opportunities for CTAs (e.g., for a business with conversion goal '{conversion_goal}', a keyword like 'how to achieve {conversion_goal}' would score 4).
+- 3 = Moderately aligned: The content idea is relevant to the business’s industry or audience interests and could attract potential customers, but requires more education or nurturing to convert (e.g., for an industry '{industry}', a keyword like 'top trends in {industry}' would score 3).
+- 2 = Loosely aligned: The content idea has a weak connection to the business’s industry or audience, with low or indirect conversion potential (e.g., for a business selling '{services}', a keyword like 'general tips for {industry}' might score 2).
+- 1 = Minimally aligned: The content idea is only tangentially related to the business’s offerings, industry, or audience, with minimal likelihood of driving conversions (e.g., for a business selling '{services}', a keyword like 'unrelated topic in {industry}' would score 1).
 
 Here is the list of keywords:
 {chr(10).join(f"{j+1}. {kw}" for j, kw in enumerate(batch))}
@@ -108,7 +108,7 @@ Return scores like:
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=800,
-                    temperature=0.2
+                    temperature=0.1  # Reduced for more deterministic scoring
                 )
 
                 lines = response.choices[0].message.content.strip().split('\n')
