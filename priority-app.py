@@ -1,3 +1,5 @@
+python
+
 import streamlit as st
 import pandas as pd
 import openai
@@ -77,18 +79,19 @@ if can_run:
             st.write(f"🧠 Processing batch {i // batch_size + 1} of {(total // batch_size) + 1}")
 
             prompt = f"""
-You are a digital marketing expert. The business you're helping works in the following industry: {industry}.
+You are a digital marketing expert specializing in content marketing. The business you're helping works in the following industry: {industry}.
 Their description: {business_desc}
 Primary conversion goal: {conversion_goal}
 Key services or products: {services}
 Target audience: {audience}
 
-Score each keyword on a scale of 1–5:
-- 5 = High intent to convert (direct service queries)
-- 4 = Likely to convert soon (comparison or product-research terms)
-- 3 = Mid-funnel (consideration)
-- 2 = Informational (top-of-funnel)
-- 1 = Not relevant or poor intent
+Score each keyword (representing a content idea) on a scale of 1–5 based on how closely it aligns with the business’s offerings and its potential to guide the target audience toward the conversion goal (e.g., through CTAs, content engagement, or natural progression into the sales funnel):
+
+- 5 = Extremely aligned: The content idea directly relates to the business’s products, services, or conversion goal, with strong potential to drive conversions (e.g., addressing specific pain points or needs that lead to the business’s solution).
+- 4 = Highly aligned: The content idea is closely tied to the business’s offerings or audience needs, attracting users who are researching solutions or evaluating options, with clear opportunities for CTAs to drive conversions.
+- 3 = Moderately aligned: The content idea is relevant to the business’s industry or audience interests, likely attracting potential customers but requiring more education or nurturing to convert.
+- 2 = Loosely aligned: The content idea has some connection to the business’s industry or audience but is broader or less focused, with lower or indirect conversion potential.
+- 1 = Minimally aligned: The content idea has only a tangential connection to the business’s offerings or audience, with minimal likelihood of driving conversions but still within the broader industry context.
 
 Here is the list of keywords:
 {chr(10).join(f"{j+1}. {kw}" for j, kw in enumerate(batch))}
