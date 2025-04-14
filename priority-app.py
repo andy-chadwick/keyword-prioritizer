@@ -160,3 +160,29 @@ Respond like:
     )
 else:
     st.warning("🚧 Please complete all fields and upload a CSV to begin.")
+
+# ----------------------------------------
+# Footer: Helpful explanation + link
+# ----------------------------------------
+
+st.markdown("---")
+st.markdown("""
+### 💡 About This Tool
+
+Welcome to our **Keyword Conversion Scoring Tool** — designed to help you prioritize which content ideas to focus on first.
+
+If you're working with a large list of blog topics, this tool helps you figure out which ones are likely to convert. It scores them based on how close they are to your primary goals — whether that's sales, sign-ups, or lead gen. It’s especially useful for spotting content that’s **bottom-of-funnel**, **easier to monetize**, or well-suited for adding strong CTAs to your products or services.
+
+🔗 Want even more content clarity?
+
+Use this in combination with [**Keyword Insights**](https://www.keywordinsights.ai/) to group keywords into clusters and generate complete page ideas around each topic.
+
+Happy prioritizing!
+""")
+
+# ----------------------------------------
+# Embedded video tutorial
+# ----------------------------------------
+
+st.markdown("### 📺 Watch: How to Use This Tool")
+st.video("https://youtu.be/zH1CPgLaO1g")
