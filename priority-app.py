@@ -185,4 +185,8 @@ Happy prioritizing!
 # ----------------------------------------
 
 st.markdown("### 📺 Watch: How to Use This Tool")
-st.video("https://youtu.be/zH1CPgLaO1g")
+st.markdown("""
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/zH1CPgLaO1g" 
+frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+allowfullscreen></iframe>
+""", unsafe_allow_html=True)
